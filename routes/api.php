@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\Api\AgentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/properties', [ApiController::class, 'searchProperties']);
@@ -14,3 +15,6 @@ Route::post('/google/user/verify_token_google', [ApiController::class, 'verifyTo
 Route::post('/send/message/email_to_provider', [ApiController::class, 'sendEmailContactUser']);
 Route::get('/send/message/email_share', [ApiController::class, 'sendEmailShare']);
 Route::post('/property_stats/register', [ApiController::class, 'propertyStatsConfig']);
+
+// Mobile App Agent routes (Ollama Local)
+Route::post('/agent/process', [AgentController::class, 'processTask']);
