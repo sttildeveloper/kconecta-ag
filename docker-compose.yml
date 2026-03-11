@@ -31,5 +31,22 @@ services:
     volumes:
       - db-data:/var/lib/mysql
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: kconecta-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    # Si la PC de la oficina o de tu casa tiene GPU Nvidia, puedes descomentar estas líneas para acelerar la IA
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
 volumes:
   db-data:
+  ollama-data:
