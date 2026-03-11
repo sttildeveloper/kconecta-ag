@@ -29,7 +29,15 @@ When you arrive at the office, follow these exact steps to resume work:
    ```
    *Tip: You can use `CTRL+D` or type `/bye` to exit the Ollama prompt once downloaded.*
 
-4. **Verify Backend AI:**
+4. **Set Up Plane API Token (Jira-Killer):**
+   Since `.env.plane` is not tracked in Git for security, we need to create it locally. Run this command in your terminal, replacing the token if you generated a new one:
+   ```powershell
+   echo "PLANE_API_URL=http://kconectaag-plane-f2adf5-72-62-30-135.traefik.me" > .env.plane
+   echo "PLANE_API_TOKEN=plane_api_c36d1301370a403a9afdb13a9c509347" >> .env.plane
+   ```
+   *(This allows your AI Assistant to read and manage your Plane issues directly).*
+
+5. **Verify Backend AI:**
    The orchestrator is ready at `app/Services/OllamaOrchestratorService.php`. It listens at `POST /api/agent/process`.
 
 5. **Start Mobile App Development:**
