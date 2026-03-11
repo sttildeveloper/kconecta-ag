@@ -1,70 +1,40 @@
 # Kconecta CRM
-
-CRM inmobiliario de Kconecta migrado desde un proyecto legacy.
-
-## Repository
-- GitHub: `https://github.com/digitalbitsolutions/kconecta-crm`
-- Moved-to (reported by GitHub): `https://github.com/sttildeveloper/kconecta-crm`
-- Branch principal: `main`
-- Remote activo: `origin`
+Backend migration powering a new AI-integrated mobile application.
 
 ## Stack
-- Laravel 12
-- PHP 8.2
-- MySQL 8
-- Docker Compose
+- **Backend:** Laravel 12, PHP 8.2, MySQL 8
+- **AI Engine:** Ollama (Mistral, DeepSeek)
+- **Mobile App:** React Native, Expo, EAS (to be implemented)
+- **Infrastructure:** Docker Compose (Local), Dokploy (Production)
 
 ## Local Run
+
+To start the full environment (including the AI engine):
 ```powershell
-cd D:\still\kconecta.com\web
 docker compose -p kconecta up -d --build
 ```
 
-App local:
-- `http://localhost:8010`
-
-## Database
-- Schema local docker: `kconecta_schema`
-
-Import manual de SQL legacy (si se necesita):
+### Initializing AI Models
+On a fresh machine, you must download the AI models into the Ollama container:
 ```powershell
-docker cp D:\still\kconecta.com\assets\damelodamelo_damelo.sql kconecta-mysql-1:/tmp/damelodamelo_damelo.sql
-docker exec kconecta-mysql-1 mysql -uroot -psecret -e "DROP DATABASE IF EXISTS kconecta_schema; CREATE DATABASE kconecta_schema CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
-docker exec kconecta-mysql-1 sh -lc "mysql -uroot -psecret kconecta_schema < /tmp/damelodamelo_damelo.sql"
+docker exec -it kconecta-ollama ollama run mistral
+docker exec -it kconecta-ollama ollama run deepseek-coder
 ```
 
-## Migration Note
-Se agrego una migracion para asegurar compatibilidad de hashes de password:
-- `database/migrations/2026_03_01_010900_expand_user_password_column.php`
+App local URLs:
+- Backend: `http://localhost:8010`
+- AI API: `http://localhost:11434`
 
-## Production Status (2026-03-04)
-- Entorno productivo activo en Dokploy.
-- URL: `https://kconecta.com/`
-- Migraciones en estado estable:
-- `php artisan migrate --force` => `Nothing to migrate`
-- Base de datos productiva poblada desde snapshot local validado.
-- Incidente 500 resuelto:
-- causa: faltaban tablas runtime (`cache`, `cache_locks`, `sessions`).
-- estado: servicio estable y rutas principales (`/`, `/login`) en `HTTP 200`.
-- Branding de home alineado a `Kconecta` en metadatos OG.
-- Conteos de referencia tras sync:
-- `user=5`
-- `user_level=5`
-- `property=31`
-- `category=3`
-- `city=61`
-- Backup previo de produccion y dump usado para sync guardados fuera del repo:
-- `D:\still\kconecta.com\backups\prod_kconecta_mysql_before_sync_20260304_180633.sql`
-- `D:\still\kconecta.com\backups\local_kconecta_schema_sync_20260304_180659.sql`
+## API Endpoints
+The backend provides standard CRM endpoints and an AI orchestrator:
+- `POST /api/agent/process` -> Delegates tasks to local Mistral/DeepSeek models based on complexity, saving cloud tokens.
 
-## Next Phase
-Operaciones y hardening:
-- validar login y flujos criticos en UI de produccion
-- rotar secretos y credenciales
-- remover fallback legacy de password en texto plano
-- estandarizar procedimiento de backups y restauracion
+## Deployment
+Automated via Dokploy linked to the `main` branch. 
+- Ensure Dokploy uses `.` as the Docker Context Path.
+- The `Dockerfile` handles a multi-stage build (Node for Vite assets -> PHP/Apache for the app).
 
-## Project Control Files
-- Estado y plan: [tasks.md](./tasks.md)
-- Contexto operativo: [agent.md](./agent.md)
-- Roadmap operativo: [roadmap.md](./roadmap.md)
+## Documentation
+- Work instructions: [agent.md](./agent.md)
+- Project phases: [roadmap.md](./roadmap.md)
+- To-do list: [tasks.md](./tasks.md)

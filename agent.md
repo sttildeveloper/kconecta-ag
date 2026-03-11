@@ -1,70 +1,39 @@
-# AGENT.md - Kconecta CRM
+# Kconecta CRM - Agent & Mobile AI Orchestration
 
 ## Goal
-Operate and evolve `kconecta-crm` with focus on:
-- stable local Docker workflow,
-- sync with GitHub,
-- deployment in Dokploy (Hostinger),
-- security hardening.
+Evolve `kconecta-ag` into a modern backend that serves a native mobile app (built with React Native and EAS Expo) and integrates local AI agents (Ollama: Mistral & DeepSeek) to optimize token costs and perform smart tasks.
 
-## Current Repo Context
-- GitHub repo: `https://github.com/digitalbitsolutions/kconecta-crm`
-- Active remote: `origin` only
-- Main branch: `main`
-- Last operational update: `2026-03-04`
-- GitHub reports repository move to: `https://github.com/sttildeveloper/kconecta-crm`
+## Tomorrow's Workflow (Office PC)
 
-## Working Rules
-- Prefer minimal, testable changes.
-- Do not hardcode secrets.
-- Keep `.env` out of remote history.
-- Record infra and deployment progress in `tasks.md`.
-- Validate critical flow locally before remote deploy:
-- container up
-- DB connection
-- login
+When you arrive at the office, follow these exact steps to resume work:
 
-## Local Runtime Baseline
-- App URL: `http://localhost:8010`
-- Containers:
-- `kconecta`
-- `kconecta-mysql-1`
-- DB schema: `kconecta_schema`
+1. **Pull the Latest Code:**
+   Open a terminal in your workspace and clone/pull the repository:
+   ```powershell
+   git clone https://github.com/digitalbitsolutions/kconecta-ag.git .
+   # OR if the folder already exists:
+   git pull origin main
+   ```
 
-## Production Runtime Baseline
-- Platform: Dokploy (Hostinger)
-- App URL: `https://kconecta.com/`
-- App service pattern: `kconecta-kconectacrm-*`
-- DB service pattern: `kconecta-crm-*`
-- DB schema: `kconecta-mysql`
+2. **Start the Docker Environment:**
+   Start your backend (Laravel), database (MySQL), and the AI Engine (Ollama):
+   ```powershell
+   docker compose -p kconecta up -d --build
+   ```
 
-## Recent Operations (2026-03-04)
-- Password reset applied for `user.id=1` (`info@sttil.com`) with bcrypt hash.
-- Password validation on server via Laravel `Hash::check(...)` returned `true`.
-- Migration state verified in production:
-- `php artisan migrate --force` => `Nothing to migrate`
-- Production data populated from local snapshot (`kconecta_schema` -> `kconecta-mysql`).
-- Runtime incident fixed in production:
-- app service was crashing with SQL error on missing table `cache`.
-- created `cache`, `cache_locks` and `sessions` tables in production DB.
-- service recovered and web responded `HTTP 200` on home/login.
-- Branding cleanup completed in runtime:
-- favicon updated to `ico.png`.
-- dashboard logout button rendered full width.
-- legacy `Dámelo Dámelo` OG metadata replaced with `Kconecta`.
-- Safety backup created before sync in local machine path:
-- `D:\still\kconecta.com\backups\prod_kconecta_mysql_before_sync_20260304_180633.sql`
-- Imported snapshot stored in local machine path:
-- `D:\still\kconecta.com\backups\local_kconecta_schema_sync_20260304_180659.sql`
+3. **Download Local AI Models (Only needed once per PC):**
+   Since LLM weights are huge, they are not stored in GitHub. Download them directly into your local Ollama container:
+   ```powershell
+   docker exec -it kconecta-ollama ollama run mistral
+   docker exec -it kconecta-ollama ollama run deepseek-coder
+   ```
+   *Tip: You can use `CTRL+D` or type `/bye` to exit the Ollama prompt once downloaded.*
 
-## Next Operational Focus
-- Validate full browser login flow on production.
-- Rotate exposed or weak credentials and keys.
-- Remove legacy plaintext password fallback in auth flow.
-- Define recurring backup and restore drill for production DB.
+4. **Verify Backend AI:**
+   The orchestrator is ready at `app/Services/OllamaOrchestratorService.php`. It listens at `POST /api/agent/process`.
 
-## Known Risks
-- Legacy dumps may override expected Laravel schema.
-- Imported users may include plaintext passwords.
-- Existing fallback login logic accepts plaintext and rehashes on login.
-- Production data can drift from local if sync is repeated without controls.
+5. **Start Mobile App Development:**
+   Initialize your React Native app using Expo in a new directory or alongside this one to start consuming the Laravel API.
+
+## Hardware Acceleration (Optional)
+If your office or home PC has an Nvidia GPU, edit `docker-compose.yml`, uncomment the `deploy > resources > reservations > devices` block under the `ollama` service, and restart the containers. This will make AI responses lightning fast.

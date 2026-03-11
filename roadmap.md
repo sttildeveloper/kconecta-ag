@@ -1,28 +1,27 @@
-# Kconecta CRM - Roadmap
+# Kconecta Mobile AI - Roadmap
 
-## Baseline (2026-03-04)
-- Repository connected and deployed in Dokploy.
-- Production DB exists and is populated with current local snapshot.
-- Core schema migrations are up to date.
-- Public branding in home metadata is aligned with `Kconecta`.
+## Phase 1 - Architecture & Smart Backend (Completed)
+- [x] Dockerize existing Laravel application.
+- [x] Integrate `ollama` service in `docker-compose.yml` with persistent volume.
+- [x] Create `OllamaOrchestratorService` to route tasks to local agents (Mistral/DeepSeek).
+- [x] Expose mobile-ready endpoints (`/api/agent/process`).
+- [x] Setup continuous deployment with Dokploy.
 
-## Phase 1 - Stabilize Production (Now)
-- Complete manual end-to-end login validation in browser.
-- Validate critical routes and admin actions with real user flow.
-- Add a simple release checklist per deploy (build, migrate, smoke test, rollback pointer).
-- Ensure deploy automation refreshes runtime immediately after `main` updates.
+## Phase 2 - Mobile App Initialization (Next step)
+- [ ] Initialize React Native project using Expo (`npx create-expo-app`).
+- [ ] Setup global state management (Zustand/Context API) and Expo Router.
+- [ ] Configure Axios/Fetch to consume Laravel's API via local network IP.
+- [ ] Implement user authentication UI (communicating with Laravel Sanctum).
+- [ ] Build the Chat/Assistant UI to interact with the local AI.
 
-## Phase 2 - Security Hardening
-- Rotate production credentials and application secrets.
-- Remove legacy plaintext-password fallback from authentication flow.
-- Enforce password reset policy for default or imported accounts.
+## Phase 3 - App Capabilities & Logic
+- [ ] Consume standard CRM endpoints (properties, services, maps).
+- [ ] Refine AI prompts for specific CRM tasks (summarizing properties, drafting emails).
+- [ ] Ensure mobile UI handles agent streaming or loading states smoothly.
 
-## Phase 3 - Data Governance
-- Define source of truth for data seeding (`seeders` vs SQL snapshots).
-- Prevent accidental local-to-production overwrite by requiring explicit approval path.
-- Schedule automated backups and test restore procedure regularly.
-
-## Phase 4 - Operational Reliability
-- Add health checks and alerting for app + DB.
-- Track migration drift between repo and production runtime.
-- Document incident response and rollback steps in ops runbook.
+## Phase 4 - Cloud & Store Deployment
+- [ ] Setup `eas.json` for Expo Application Services (EAS).
+- [ ] Configure signing credentials for Android (Keystore) and iOS (Certificates).
+- [ ] Run `eas build --platform android --profile production` to generate `.aab`.
+- [ ] Submit `.aab` to Google Play Console.
+- [ ] Process App Store submission via Transporter / EAS Submit.
