@@ -1,0 +1,176 @@
+.card-grid{
+
+}
+.container-form-inputs{
+    margin-top: .6rem;
+}
+.container-service-main-block{
+    border: 1px solid rgb(231, 226, 226);
+    width: 100%;
+    overflow: hidden;
+    max-width: 35rem;
+    border-radius: .4rem;
+    height: 14rem;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    box-sizing: border-box;
+    column-gap: .4rem;
+}
+.container-service-main-block .container-image{
+    width: 15rem;
+    height: 100%;
+}
+.container-service-main-block .container-image img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.container-service-main-block .container-details{
+    width: calc(100% - 16.6rem);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: .4rem;
+    padding-top: 1rem;
+    position: relative;
+    box-sizing: border-box;
+}
+.container-service-main-block .container-details .container-btns-redirect{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: .4rem;
+    padding: .4rem;
+    box-sizing: border-box;
+    position: absolute;
+    bottom: .6rem;
+}
+.container-service-main-block .container-details .container-btns-redirect .redirect-view,
+.container-service-main-block .container-details .container-btns-redirect .whatsapp-btn-contact-link{
+    width: 100%;
+    background-color: rgb(122, 195, 122);
+    color: white;
+    padding: .4rem;
+    border-radius: .4rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    column-gap: .4rem;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+.container-service-main-block .container-details .container-btns-redirect .redirect-view{
+    background-color: var(--color-main-1);
+}
+.container-service-main-block .container-details .container-row-data{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    column-gap: .4rem;
+    row-gap: .4rem;
+}
+.container-service-main-block .container-details .container-row-data .title-name-main,
+.container-service-main-block .container-details .container-row-data h4{
+    font-weight: bold;
+    font-size: .9rem;
+    color: rgb(95, 89, 89);
+}
+.container-service-main-block .container-details .container-row-data span{
+    font-size: .9rem;
+    color: rgb(102, 96, 96);   
+    margin-left: .8rem;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    column-gap: .4rem;
+}
+.container-service-main-block .container-details .container-row-data span svg{
+    flex-shrink: 0;
+}
+.container-form-inputs .container-label-radio{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    row-gap: .6rem;
+    user-select: none;
+    margin-top: .8rem;
+}
+.container-form-inputs .container-label-radio .radio{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    column-gap: .3rem;
+    width: 100%;
+} 
+
+.container-map-main-search #map .gm-style-iw-chr{
+    height: 1.8rem;
+}
+.container-map-main-search #map .gm-ui-hover-effect {
+    top: -.5rem;
+    right: -1rem;
+}
+
+/* mapa market styles */
+.container-map-details-info-app-main{
+    width: 8rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;    
+    row-gap: .2rem;
+}
+.container-map-details-info-app-main > h3{
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+    margin-bottom: .2rem;
+}
+.container-map-details-info-app-main .a-redirect-view{
+    background-color: var(--color-main-1);
+    color: white;
+    padding: .3rem;
+    font-size: .9rem;
+    border-radius: .3rem;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: .2rem;
+    margin-top: .3rem;
+}
+.container-map-details-info-app-main .div-row-data{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    column-gap: .2rem;
+}
+@media screen and (orientation: portrait) {
+    .container-service-main-block{
+        flex-direction: column;
+        width: 100%;
+        max-width: 30rem;
+        height: auto;
+    }
+    .container-service-main-block .container-image{
+        width: 100%;
+    }
+    .container-service-main-block .container-details {
+        width: 100%;
+    }
+    .container-service-main-block .container-details .container-btns-redirect{
+        position: relative;
+        bottom: 0;
+        margin-top: .8rem;
+    }
+}

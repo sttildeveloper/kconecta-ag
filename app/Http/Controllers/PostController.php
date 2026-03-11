@@ -1,0 +1,1715 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Category;
+use App\Models\City;
+use App\Models\ContactOption;
+use App\Models\Country;
+use App\Models\CoverImage;
+use App\Models\Door;
+use App\Models\EmissionsRating;
+use App\Models\EnergyClass;
+use App\Models\Equipment;
+use App\Models\Equipments;
+use App\Models\Facade;
+use App\Models\Feature;
+use App\Models\Features;
+use App\Models\GaragePriceCategory;
+use App\Models\HeatingFuel;
+use App\Models\LocationPremises;
+use App\Models\MoreImage;
+use App\Models\NearestMunicipalityDistance;
+use App\Models\Orientation;
+use App\Models\Orientations;
+use App\Models\Plant;
+use App\Models\PlazaCapacity;
+use App\Models\PowerConsumptionRating;
+use App\Models\Property;
+use App\Models\PropertyAddress;
+use App\Models\Province;
+use App\Models\ReasonForSale;
+use App\Models\RentalType;
+use App\Models\Service;
+use App\Models\ServiceAddress;
+use App\Models\ServiceType;
+use App\Models\ServiceTypeLink;
+use App\Models\State;
+use App\Models\StateConservation;
+use App\Models\Type;
+use App\Models\TypeFloor;
+use App\Models\TypeHeating;
+use App\Models\TypeOfTerrain;
+use App\Models\TypesFloors;
+use App\Models\Typology;
+use App\Models\User;
+use App\Models\UserAddress;
+use App\Models\UserLevel;
+use App\Models\Video;
+use App\Models\VisibilityInPortals;
+use App\Models\WheeledAccess;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class PostController extends Controller
+{
+    public function index()
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $userLevelName = UserLevel::find($user->user_level_id)?->name ?? 'Usuario';
+        $featuredTypeConfig = [
+            1 => [
+                'label' => 'Casa o chalet',
+                'image' => 'img/casa-1.webp',
+                'summary' => 'Viviendas familiares con espacios amplios.',
+            ],
+            15 => [
+                'label' => 'Casa rústica',
+                'image' => 'img/casa-rustica.png',
+                'summary' => 'Entorno natural y estilo rural.',
+            ],
+            13 => [
+                'label' => 'Piso',
+                'image' => 'img/piso-icon.png',
+                'summary' => 'Opciones urbanas listas para habitar.',
+            ],
+            4 => [
+                'label' => 'Local o nave',
+                'image' => 'img/nave-local-icon.avif',
+                'summary' => 'Ideal para actividad comercial o almacén.',
+            ],
+            14 => [
+                'label' => 'Garaje',
+                'image' => 'img/garaje-icon.png',
+                'summary' => 'Seguridad para tu vehículo o plaza.',
+            ],
+            9 => [
+                'label' => 'Terreno',
+                'image' => 'img/pueblo-terreno_1.avif',
+                'summary' => 'Suelo para proyectos o inversión.',
+            ],
+        ];
+
+        $typeRows = Type::whereIn('id', array_keys($featuredTypeConfig))
+            ->get(['id', 'name'])
+            ->keyBy('id');
+
+        $propertyTypes = [];
+        foreach ($featuredTypeConfig as $typeId => $config) {
+            $propertyTypes[] = [
+                'id' => $typeId,
+                'label' => $typeRows[$typeId]->name ?? $config['label'],
+                'image' => $config['image'],
+                'summary' => $config['summary'],
+            ];
+        }
+
+        return view('post.index', [
+            'user' => $user,
+            'userLevelName' => $userLevelName,
+            'isAdmin' => (int) $user->user_level_id === 1,
+            'activeNav' => 'properties',
+            'propertyTypes' => $propertyTypes,
+        ]);
+    }
+
+    public function postDetails(string $reference)
+    {
+        return view('placeholder', ['title' => 'Post Details']);
+    }
+
+    public function createForm(string $id)
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $userLevelName = UserLevel::find($user->user_level_id)?->name ?? 'Usuario';
+        $isAdmin = (int) $user->user_level_id === 1;
+
+        if ($id === 'service') {
+            $serviceType = ServiceType::orderBy('name')->get();
+
+            return view('post.forms.form_service', [
+                'user' => $user,
+                'userLevelName' => $userLevelName,
+                'isAdmin' => $isAdmin,
+                'activeNav' => 'services',
+                'mapsKey' => config('services.google.maps_key'),
+                'serviceType' => $serviceType,
+            ]);
+        }
+
+        $category = Category::all();
+        $contactOption = ContactOption::all();
+        $visibilityInPortals = VisibilityInPortals::all();
+        $rentalType = RentalType::all();
+        $reasonForSale = ReasonForSale::all();
+        $typology = Typology::where('type_id', 1)->get();
+        $orientation = Orientation::all();
+        $typeHeating = TypeHeating::all();
+        $heatingFuel = HeatingFuel::all();
+        $energyClass = EnergyClass::all();
+        $powerConsumptionRating = PowerConsumptionRating::all();
+        $emissionsRating = EmissionsRating::all();
+        $stateConservation = StateConservation::all();
+        $plant = Plant::all();
+        $typeFloor = TypeFloor::all();
+        $facade = Facade::all();
+        $feature = Feature::all();
+        $equipment = Equipment::all();
+        $plazaCapacity = PlazaCapacity::all();
+        $typeOfTerrain = TypeOfTerrain::all();
+        $wheeledAccess = WheeledAccess::all();
+        $nearestMunicipalityDistance = NearestMunicipalityDistance::all();
+        $locationPremises = LocationPremises::all();
+        $garagePriceCategory = GaragePriceCategory::all();
+
+        $formView = null;
+        switch ((string) $id) {
+            case '1':
+                $equipment = Equipment::where('type_id', 1)->get();
+                $formView = 'post.forms.form_1';
+                break;
+            case '13':
+                $equipment = Equipment::where('type_id', 1)->get();
+                $formView = 'post.forms.form_2';
+                break;
+            case '4':
+                $equipment = Equipment::where('type_id', 4)->get();
+                $formView = 'post.forms.form_3';
+                break;
+            case '14':
+                $feature = Feature::where('id_type', 14)->get();
+                $equipment = Equipment::where('type_id', 14)->get();
+                $formView = 'post.forms.form_4';
+                break;
+            case '9':
+                $equipment = Equipment::where('type_id', 4)->get();
+                $formView = 'post.forms.form_5';
+                break;
+            case '15':
+                $typology = Typology::where('type_id', 15)->get();
+                $formView = 'post.forms.form_casa_rustica';
+                break;
+        }
+
+        if (! $formView) {
+            return redirect()->to('/post/index');
+        }
+
+        return view($formView, [
+            'user' => $user,
+            'userLevelName' => $userLevelName,
+            'isAdmin' => $isAdmin,
+            'activeNav' => 'properties',
+            'mapsKey' => config('services.google.maps_key'),
+            'category' => $category,
+            'contactOption' => $contactOption,
+            'visibilityInPortals' => $visibilityInPortals,
+            'rentalType' => $rentalType,
+            'reasonForSale' => $reasonForSale,
+            'typology' => $typology,
+            'orientation' => $orientation,
+            'typeHeating' => $typeHeating,
+            'heatingFuel' => $heatingFuel,
+            'energyClass' => $energyClass,
+            'powerConsumptionRating' => $powerConsumptionRating,
+            'emissionsRating' => $emissionsRating,
+            'stateConservation' => $stateConservation,
+            'plant' => $plant,
+            'typeFloor' => $typeFloor,
+            'facade' => $facade,
+            'feature' => $feature,
+            'equipment' => $equipment,
+            'plazaCapacity' => $plazaCapacity,
+            'typeOfTerrain' => $typeOfTerrain,
+            'wheeledAccess' => $wheeledAccess,
+            'nearestMunicipalityDistance' => $nearestMunicipalityDistance,
+            'locationPremises' => $locationPremises,
+            'garagePriceCategory' => $garagePriceCategory,
+        ]);
+    }
+
+    public function myPosts()
+    {
+        $user = Auth::user();
+        $isAdmin = $user && (int) $user->user_level_id === 1;
+        $userLevelName = $user ? (UserLevel::find($user->user_level_id)?->name ?? 'Usuario') : 'Usuario';
+        $isCompanyUser = $user && (int) $user->user_level_id === User::LEVEL_AGENT;
+
+        $request = request();
+        $filters = [
+            'q' => trim((string) $request->query('q', '')),
+            'status' => (string) $request->query('status', ''),
+            'category' => (string) $request->query('category', ''),
+            'type' => (string) $request->query('type', ''),
+            'ds' => (string) $request->query('ds', ''),
+            'de' => (string) $request->query('de', ''),
+        ];
+
+        $query = Property::query();
+        if (! $isAdmin && $user) {
+            $query->where('user_id', $user->id);
+        }
+
+        if ($filters['q'] !== '') {
+            $search = $filters['q'];
+            $query->where(function ($builder) use ($search) {
+                $builder->where('title', 'like', '%' . $search . '%')
+                    ->orWhere('reference', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($filters['status'] !== '' && $filters['status'] !== 'all') {
+            $query->where('state_id', (int) $filters['status']);
+        }
+
+        if ($filters['category'] !== '' && $filters['category'] !== 'all') {
+            $query->where('category_id', (int) $filters['category']);
+        }
+
+        if ($filters['type'] !== '' && $filters['type'] !== 'all') {
+            $query->where('type_id', (int) $filters['type']);
+        }
+
+        if ($filters['ds'] !== '') {
+            $query->whereDate('created_at', '>=', $filters['ds']);
+        }
+
+        if ($filters['de'] !== '') {
+            $query->whereDate('created_at', '<=', $filters['de']);
+        }
+
+        $properties = $query->orderByDesc('id')->paginate(9)->withQueryString();
+
+        $propertyIds = $properties->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $coverImages = empty($propertyIds)
+            ? collect()
+            : CoverImage::whereIn('property_id', $propertyIds)->get()->keyBy('property_id');
+        $addressRows = empty($propertyIds)
+            ? collect()
+            : PropertyAddress::whereIn('property_id', $propertyIds)->get()->groupBy('property_id');
+        $categoryMap = Category::pluck('name', 'id')->all();
+        $typeMap = Type::pluck('name', 'id')->all();
+        $stateLabels = State::pluck('name', 'id')->all();
+        $stateLabels[4] = $stateLabels[4] ?? 'Publicado';
+        $stateLabels[5] = $stateLabels[5] ?? 'Inactivo';
+
+        $ownerIds = $isAdmin ? $properties->pluck('user_id')->filter()->unique()->values()->all() : [];
+        $owners = empty($ownerIds) ? collect() : User::whereIn('id', $ownerIds)->get()->keyBy('id');
+
+        $properties->getCollection()->transform(function (Property $property) use ($coverImages, $addressRows, $categoryMap, $typeMap, $stateLabels, $owners, $isAdmin) {
+            $address = $addressRows->get($property->id)?->first();
+            $price = $property->sale_price ?: $property->rental_price;
+            $owner = $isAdmin ? $owners->get($property->user_id) : null;
+            $ownerName = '';
+            if ($owner) {
+                $ownerName = trim(($owner->first_name ?? '') . ' ' . ($owner->last_name ?? ''));
+                if ($ownerName === '') {
+                    $ownerName = $owner->user_name ?? '';
+                }
+            }
+
+            return [
+                'id' => $property->id,
+                'reference' => $property->reference,
+                'title' => $property->title ?: 'Sin titulo',
+                'category' => $categoryMap[$property->category_id] ?? 'Sin categoria',
+                'type' => $typeMap[$property->type_id] ?? 'Sin tipo',
+                'price' => $price,
+                'meters' => $property->meters_built,
+                'address' => $address?->address ?? '',
+                'city' => $address?->city ?? '',
+                'image' => $coverImages->get($property->id)?->url ?? null,
+                'state_id' => (int) $property->state_id,
+                'state_label' => $stateLabels[$property->state_id] ?? 'Sin estado',
+                'updated_at' => $property->updated_at ? $property->updated_at->format('d/m/Y') : '',
+                'owner' => $ownerName,
+            ];
+        });
+
+        $categoryOptions = Category::orderBy('name')->get(['id', 'name']);
+        $typeOptions = Type::orderBy('name')->get(['id', 'name']);
+        $statusOptions = [
+            '4' => $stateLabels[4] ?? 'Publicado',
+            '5' => $stateLabels[5] ?? 'Inactivo',
+        ];
+        foreach ($stateLabels as $key => $label) {
+            if (! isset($statusOptions[(string) $key])) {
+                $statusOptions[(string) $key] = $label;
+            }
+        }
+
+        return view('post.my_posts', [
+            'user' => $user,
+            'userLevelName' => $userLevelName,
+            'isAdmin' => $isAdmin,
+            'isCompanyUser' => $isCompanyUser,
+            'activeNav' => 'properties',
+            'properties' => $properties,
+            'filters' => $filters,
+            'categoryOptions' => $categoryOptions,
+            'typeOptions' => $typeOptions,
+            'statusOptions' => $statusOptions,
+        ]);
+    }
+
+    public function create(Request $request)
+    {
+        return redirect()->back();
+    }
+
+    public function update(Request $request)
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $propertyId = (int) $request->input('property_id');
+        if (! $propertyId) {
+            return redirect()->back();
+        }
+
+        $isAdmin = (int) $user->user_level_id === 1;
+        $propertyQuery = Property::where('id', $propertyId);
+        if (! $isAdmin) {
+            $propertyQuery->where('user_id', $user->id);
+        }
+        $property = $propertyQuery->first();
+        if (! $property) {
+            return redirect()
+                ->to('/post/my_posts')
+                ->with('status', 'Ocurrio un error interno');
+        }
+
+        $dataForDb = [];
+        $typeId = $request->input('type');
+        $locality = $request->input('locality');
+        $number = $request->input('number');
+        $escBlock = $request->input('esc_block');
+        $door = $request->input('door');
+        $nameUrbanization = $request->input('name_urbanization');
+        $visibilityInPortalsId = $request->input('visibility_in_portals');
+        $typologyId = $request->input('typology');
+        $plotMeters = $request->input('plot_meters');
+        $numberOfPlants = $request->input('number_of_plants');
+        $energyClassId = $request->input('energy_class');
+        $energyConsumption = $request->input('energy_consumption');
+        $emissionsRatingId = $request->input('emissions_rating');
+        $emissionsConsumption = $request->input('emissions_consumption');
+        $stateConservationId = $request->input('state_conservation');
+        $orientation = $request->input('orientation');
+        $outdoorWheelchair = $request->input('outdoor_wheelchair');
+        $interiorWheelchair = $request->input('interior_wheelchair');
+        $typeHeatingId = $request->input('type_heating');
+        $pageUrl = $request->input('page_url');
+        $title = $request->input('title');
+        $description = $request->input('description');
+        $categoryId = $request->input('category');
+        $metersBuilt = $request->input('meters_built');
+        $usefulMeters = $request->input('useful_meters');
+        $salePrice = $request->input('sale_price');
+        $rentalPrice = $request->input('rental_price');
+        $communityExpenses = $request->input('community_expenses');
+        $yearOfConstruction = $request->input('year_of_construction');
+        $bedrooms = $request->input('bedrooms');
+        $bathrooms = $request->input('bathrooms');
+        $parking = $request->input('parking');
+        $feature = $request->input('feature');
+        $countryId = $request->input('country');
+        $cityId = $request->input('city');
+        $provinceId = $request->input('province');
+        $addressValue = $request->input('address');
+        $closeTo = $request->input('close_to');
+        $zipCode = $request->input('zip_code');
+        $rentalTypeId = $request->input('rental_type');
+        $contactOptionId = $request->input('contact_option');
+        $powerConsumptionRatingId = $request->input('power_consumption_rating');
+        $reasonForSaleId = $request->input('reason_for_sale');
+        $rooms = $request->input('rooms');
+        $elevator = $request->input('elevator');
+        $plantId = $request->input('plant');
+        $doorId = $request->input('door');
+        $typeFloor = $request->input('type_floor');
+        $appropriateForChildren = $request->input('appropriate_for_children');
+        $petFriendly = $request->input('pet_friendly');
+        $maxNumTenants = $request->input('max_num_tenants');
+        $bankOwnedProperty = $request->input('bank_owned_property');
+        $guarantee = $request->input('guarantee');
+        $ibi = $request->input('ibi');
+        $mortgageRate = $request->input('mortgage_rate');
+        $wheelchairAccessibleElevator = $request->input('wheelchair_accessible_elevator');
+        $facadeId = $request->input('facade');
+        $equipment = $request->input('equipment');
+        $noNumber = $request->input('no-number');
+        $plazaCapacityId = $request->input('plaza_capacity');
+        $linearMetersOfFacade = $request->input('linear_meters_of_facade');
+        $stays = $request->input('stays');
+        $numberOfShopWindows = $request->input('number_of_shop_windows');
+        $hasTenants = $request->input('has_tenants');
+        $landSize = $request->input('land_size');
+        $nearestMunicipalityDistanceId = $request->input('nearest_municipality_distance');
+        $wheeledAccessId = $request->input('wheeled_access');
+        $typeOfTerrainId = $request->input('type_of_terrain');
+        $heatingFuelId = $request->input('heating_fuel');
+        $mLong = $request->input('m_long');
+        $mWide = $request->input('m_wide');
+        $locationPremisesId = $request->input('location_premises');
+        $garagePriceCategoryId = $request->input('garage_price_category');
+        $garagePrice = $request->input('garage_price');
+
+        $address = $request->input('address');
+        $city = $request->input('city');
+        $postalCode = $request->input('postal_code');
+        $province = $request->input('province');
+        $country = $request->input('country');
+        $latitude = $request->input('latitude');
+        $longitude = $request->input('longitude');
+
+        if (! empty($garagePrice)) {
+            $dataForDb['garage_price'] = $garagePrice;
+        }
+        $dataForDb['garage_price_category_id'] = $garagePriceCategoryId;
+        if (! empty($locationPremisesId)) {
+            $dataForDb['location_premises_id'] = $locationPremisesId;
+        }
+        if (! empty($mLong)) {
+            $dataForDb['m_long'] = str_replace('.', '', $mLong);
+        }
+        if (! empty($mWide)) {
+            $dataForDb['m_wide'] = str_replace('.', '', $mWide);
+        }
+        if (! empty($heatingFuelId)) {
+            $dataForDb['heating_fuel_id'] = $heatingFuelId;
+        }
+        if (! empty($landSize)) {
+            $dataForDb['land_size'] = str_replace('.', '', $landSize);
+        }
+        if (! empty($nearestMunicipalityDistanceId)) {
+            $dataForDb['nearest_municipality_distance_id'] = $nearestMunicipalityDistanceId;
+        }
+        if (! empty($wheeledAccessId)) {
+            $dataForDb['wheeled_access_id'] = $wheeledAccessId;
+        }
+        if (! empty($typeOfTerrainId)) {
+            $dataForDb['type_of_terrain_id'] = $typeOfTerrainId;
+        }
+        if (! empty($linearMetersOfFacade)) {
+            $dataForDb['linear_meters_of_facade'] = $linearMetersOfFacade;
+        }
+        if (! empty($stays)) {
+            $dataForDb['stays'] = $stays;
+        }
+        if (! empty($numberOfShopWindows)) {
+            $dataForDb['number_of_shop_windows'] = $numberOfShopWindows;
+        }
+        if (! empty($hasTenants)) {
+            $dataForDb['has_tenants'] = $hasTenants;
+        }
+        if (! empty($plazaCapacityId)) {
+            $dataForDb['plaza_capacity_id'] = $plazaCapacityId;
+        }
+        if (! empty($appropriateForChildren)) {
+            $dataForDb['appropriate_for_children'] = $appropriateForChildren;
+        }
+        if (! empty($petFriendly)) {
+            $dataForDb['pet_friendly'] = $petFriendly;
+        }
+        if (! empty($maxNumTenants)) {
+            $dataForDb['max_num_tenants'] = str_replace('.', '', $maxNumTenants);
+        }
+        if (! empty($bankOwnedProperty)) {
+            $dataForDb['bank_owned_property'] = $bankOwnedProperty;
+        }
+        if (! empty($guarantee)) {
+            $dataForDb['guarantee'] = $guarantee;
+        }
+        if (! empty($ibi)) {
+            $dataForDb['ibi'] = $ibi;
+        }
+        if (! empty($mortgageRate)) {
+            $dataForDb['mortgage_rate'] = $mortgageRate;
+        }
+        if (! empty($wheelchairAccessibleElevator)) {
+            $dataForDb['wheelchair_accessible_elevator'] = $wheelchairAccessibleElevator;
+        }
+        if (! empty($facadeId)) {
+            $dataForDb['facade_id'] = $facadeId;
+        }
+        if (! empty($rooms)) {
+            $dataForDb['rooms'] = str_replace('.', '', $rooms);
+        }
+        if (! empty($elevator)) {
+            $dataForDb['elevator'] = $elevator;
+        }
+        if (! empty($plantId)) {
+            $dataForDb['plant_id'] = $plantId;
+        }
+        if (! empty($doorId)) {
+            $dataForDb['door_id'] = $doorId;
+        }
+        if (! empty($typeId)) {
+            $dataForDb['type_id'] = $typeId;
+        }
+        if (! empty($locality)) {
+            $dataForDb['locality'] = $locality;
+        }
+        if (! empty($number)) {
+            $dataForDb['number'] = $number;
+        } elseif (! empty($noNumber)) {
+            $dataForDb['number'] = $noNumber;
+        }
+        if (! empty($escBlock)) {
+            $dataForDb['esc_block'] = $escBlock;
+        }
+        if (! empty($door)) {
+            $dataForDb['door'] = $door;
+        }
+        if (! empty($nameUrbanization)) {
+            $dataForDb['name_urbanization'] = $nameUrbanization;
+        }
+        if (! empty($visibilityInPortalsId)) {
+            $dataForDb['visibility_in_portals_id'] = $visibilityInPortalsId;
+        }
+        if (! empty($typologyId)) {
+            $dataForDb['typology_id'] = $typologyId;
+        }
+        if (! empty($plotMeters)) {
+            $dataForDb['plot_meters'] = str_replace('.', '', $plotMeters);
+        }
+        if (! empty($numberOfPlants)) {
+            $dataForDb['number_of_plants'] = str_replace('.', '', $numberOfPlants);
+        }
+        if (! empty($energyClassId)) {
+            $dataForDb['energy_class_id'] = $energyClassId;
+        }
+        if (! empty($energyConsumption)) {
+            $dataForDb['energy_consumption'] = $energyConsumption;
+        }
+        if (! empty($emissionsRatingId)) {
+            $dataForDb['emissions_rating_id'] = $emissionsRatingId;
+        }
+        if (! empty($emissionsConsumption)) {
+            $dataForDb['emissions_consumption'] = $emissionsConsumption;
+        }
+        if (! empty($stateConservationId)) {
+            $dataForDb['state_conservation_id'] = $stateConservationId;
+        }
+        if (! empty($outdoorWheelchair)) {
+            $dataForDb['outdoor_wheelchair'] = $outdoorWheelchair;
+        }
+        if (! empty($interiorWheelchair)) {
+            $dataForDb['interior_wheelchair'] = $interiorWheelchair;
+        }
+        if (! empty($typeHeatingId)) {
+            $dataForDb['type_heating_id'] = $typeHeatingId;
+        }
+        if (! empty($pageUrl)) {
+            $dataForDb['page_url'] = $pageUrl;
+        }
+        if (! empty($title)) {
+            $dataForDb['title'] = $title;
+        }
+        if (! empty($description)) {
+            $dataForDb['description'] = $description;
+        }
+        if (! empty($categoryId)) {
+            $dataForDb['category_id'] = $categoryId;
+        }
+        if (! empty($metersBuilt)) {
+            $dataForDb['meters_built'] = str_replace('.', '', $metersBuilt);
+        }
+        if (! empty($usefulMeters)) {
+            $dataForDb['useful_meters'] = str_replace('.', '', $usefulMeters);
+        }
+        if (! empty($salePrice)) {
+            $dataForDb['sale_price'] = str_replace('.', '', $salePrice);
+        }
+        if (! empty($rentalPrice)) {
+            $dataForDb['rental_price'] = str_replace('.', '', $rentalPrice);
+        }
+        if (! empty($communityExpenses)) {
+            $dataForDb['community_expenses'] = str_replace('.', '', $communityExpenses);
+        }
+        if (! empty($yearOfConstruction)) {
+            $dataForDb['year_of_construction'] = $yearOfConstruction;
+        }
+        if (! empty($bedrooms)) {
+            $dataForDb['bedrooms'] = str_replace('.', '', $bedrooms);
+        }
+        if (! empty($bathrooms)) {
+            $dataForDb['bathrooms'] = str_replace('.', '', $bathrooms);
+        }
+        if (! empty($parking)) {
+            $dataForDb['parking'] = $parking;
+        }
+        if (! empty($countryId)) {
+            $dataForDb['country_id'] = $countryId;
+        }
+        if (! empty($cityId)) {
+            $dataForDb['city_id'] = $cityId;
+        }
+        if (! empty($provinceId)) {
+            $dataForDb['province_id'] = $provinceId;
+        }
+        if (! empty($addressValue)) {
+            $dataForDb['address'] = $addressValue;
+        }
+        if (! empty($closeTo)) {
+            $dataForDb['close_to'] = $closeTo;
+        }
+        if (! empty($zipCode)) {
+            $dataForDb['zip_code'] = $zipCode;
+        }
+        if (! empty($rentalTypeId)) {
+            $dataForDb['rental_type_id'] = $rentalTypeId;
+        }
+        if (! empty($contactOptionId)) {
+            $dataForDb['contact_option_id'] = $contactOptionId;
+        }
+        if (! empty($powerConsumptionRatingId)) {
+            $dataForDb['power_consumption_rating_id'] = $powerConsumptionRatingId;
+        }
+        if (! empty($reasonForSaleId)) {
+            $dataForDb['reason_for_sale_id'] = $reasonForSaleId;
+        }
+
+        Property::where('id', $propertyId)->update($dataForDb);
+
+        PropertyAddress::updateOrCreate(
+            ['property_id' => $propertyId],
+            [
+                'address' => $address ?? '',
+                'city' => $city ?? '',
+                'province' => $province ?? '',
+                'postal_code' => $postalCode ?? '',
+                'country' => $country ?? '',
+                'latitude' => $latitude ?? '',
+                'longitude' => $longitude ?? '',
+            ]
+        );
+
+        if (! empty($equipment)) {
+            Equipments::where('property_id', $propertyId)->delete();
+            foreach ($equipment as $value) {
+                Equipments::create([
+                    'property_id' => $propertyId,
+                    'equipment_id' => $value,
+                ]);
+            }
+        }
+        if (! empty($feature)) {
+            Features::where('property_id', $propertyId)->delete();
+            foreach ($feature as $value) {
+                Features::create([
+                    'property_id' => $propertyId,
+                    'feature_id' => $value,
+                ]);
+            }
+        }
+        if (! empty($typeFloor)) {
+            TypesFloors::where('property_id', $propertyId)->delete();
+            foreach ($typeFloor as $value) {
+                TypesFloors::create([
+                    'property_id' => $propertyId,
+                    'type_floor_id' => $value,
+                ]);
+            }
+        }
+        if (! empty($orientation)) {
+            Orientations::where('property_id', $propertyId)->delete();
+            foreach ($orientation as $value) {
+                Orientations::create([
+                    'property_id' => $propertyId,
+                    'orientation_id' => $value,
+                ]);
+            }
+        }
+
+        $imagePath = public_path('img/uploads');
+        $videoPath = public_path('video/uploads');
+        if (! is_dir($imagePath)) {
+            @mkdir($imagePath, 0755, true);
+        }
+        if (! is_dir($videoPath)) {
+            @mkdir($videoPath, 0755, true);
+        }
+
+        $coverImage = $request->file('cover_image');
+        if ($coverImage && $coverImage->isValid()) {
+            $randomName = bin2hex(random_bytes(16)) . '.webp';
+            $tempPath = $coverImage->getRealPath();
+            $image = null;
+            $isWebp = false;
+            switch ($coverImage->getMimeType()) {
+                case 'image/webp':
+                    $isWebp = true;
+                    if (! $coverImage->move($imagePath, $randomName)) {
+                        return redirect()->back()->with('error', 'Error al mover la imagen WebP.');
+                    }
+                    break;
+                case 'image/jpeg':
+                    $image = imagecreatefromjpeg($tempPath);
+                    break;
+                case 'image/png':
+                    $image = imagecreatefrompng($tempPath);
+                    break;
+                default:
+                    return redirect()->back()->with('error', 'Formato de imagen no soportado.');
+            }
+            if (! $isWebp) {
+                $webpPath = $imagePath . DIRECTORY_SEPARATOR . $randomName;
+                if (imagewebp($image, $webpPath, 80)) {
+                    CoverImage::updateOrCreate(
+                        ['property_id' => $propertyId],
+                        ['url' => $randomName]
+                    );
+                } else {
+                    return redirect()->back()->with('error', 'Error al convertir la imagen a WebP.');
+                }
+                imagedestroy($image);
+            } else {
+                CoverImage::updateOrCreate(
+                    ['property_id' => $propertyId],
+                    ['url' => $randomName]
+                );
+            }
+        }
+
+        $moreImages = $request->file('more_images', []);
+        if (! empty($moreImages)) {
+            foreach ((array) $moreImages as $file) {
+                if (! $file || ! $file->isValid()) {
+                    continue;
+                }
+
+                $randomName = bin2hex(random_bytes(16)) . '.webp';
+                $tempPath = $file->getRealPath();
+                $image = null;
+                $isWebp = false;
+                switch ($file->getMimeType()) {
+                    case 'image/webp':
+                        $isWebp = true;
+                        if (! $file->move($imagePath, $randomName)) {
+                            return redirect()->back()->with('error', 'Error al mover la imagen WebP.');
+                        }
+                        break;
+                    case 'image/jpeg':
+                        $image = imagecreatefromjpeg($tempPath);
+                        break;
+                    case 'image/png':
+                        $image = imagecreatefrompng($tempPath);
+                        break;
+                    default:
+                        return redirect()->back()->with('error', 'Formato de imagen no soportado.');
+                }
+                if (! $isWebp) {
+                    $webpPath = $imagePath . DIRECTORY_SEPARATOR . $randomName;
+                    if (imagewebp($image, $webpPath, 80)) {
+                        MoreImage::create([
+                            'url' => $randomName,
+                            'property_id' => $propertyId,
+                        ]);
+                    } else {
+                        return redirect()->back()->with('error', 'Error al convertir la imagen a WebP.');
+                    }
+                    imagedestroy($image);
+                } else {
+                    MoreImage::create([
+                        'url' => $randomName,
+                        'property_id' => $propertyId,
+                    ]);
+                }
+            }
+        }
+
+        $video = $request->file('video');
+        if ($video && $video->isValid()) {
+            $allowedMime = ['video/mp4', 'video/avi', 'video/mov', 'video/mpeg'];
+            if (! in_array($video->getMimeType(), $allowedMime, true)) {
+                return redirect()->back()->with('error', 'El video no es valido.');
+            }
+            if ($video->getSize() > 51200 * 1024) {
+                return redirect()->back()->with('error', 'El video excede el limite permitido.');
+            }
+
+            $extension = $video->getClientOriginalExtension();
+            $randomName = bin2hex(random_bytes(16)) . '.' . $extension;
+            if (! $video->move($videoPath, $randomName)) {
+                return redirect()->back()->with('error', 'Error al guardar el video.');
+            }
+
+            Video::updateOrCreate(
+                ['property_id' => $propertyId],
+                ['url' => $randomName]
+            );
+        }
+
+        return redirect()
+            ->to('/post/my_posts')
+            ->with('status', 'Actualizado correctamente');
+    }
+
+    public function updateForm(string $id)
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $isAdmin = (int) $user->user_level_id === 1;
+        $propertyQuery = Property::where('id', $id);
+        if (! $isAdmin) {
+            $propertyQuery->where('user_id', $user->id);
+        }
+        $property = $propertyQuery->get()->toArray();
+        if (empty($property)) {
+            return redirect()
+                ->to('/post/my_posts')
+                ->with('status', 'Ocurrio un error interno');
+        }
+
+        $propertyAddress = PropertyAddress::where('property_id', $id)->get()->toArray();
+        if (empty($propertyAddress)) {
+            $propertyAddress = [[
+                'address' => '',
+                'city' => '',
+                'province' => '',
+                'postal_code' => '',
+                'country' => '',
+                'latitude' => '',
+                'longitude' => '',
+            ]];
+        }
+
+        $category = Category::all()->toArray();
+        $city = City::all()->toArray();
+        $country = Country::all()->toArray();
+        $feature = Feature::all()->toArray();
+        $province = Province::all()->toArray();
+        $state = State::all()->toArray();
+        $type = Type::all()->toArray();
+        $userLevel = UserLevel::all()->toArray();
+        $typeId = (int) $property[0]['type_id'];
+        $typology = $typeId === 15
+            ? Typology::where('type_id', 15)->get()->toArray()
+            : Typology::where('type_id', 1)->get()->toArray();
+        $orientation = Orientation::all()->toArray();
+        $typeHeating = TypeHeating::all()->toArray();
+        $emissionsRating = EmissionsRating::all()->toArray();
+        $energyClass = EnergyClass::all()->toArray();
+        $stateConservation = StateConservation::all()->toArray();
+        $visibilityInPortals = VisibilityInPortals::all()->toArray();
+        $rentalType = RentalType::all()->toArray();
+        $contactOption = ContactOption::all()->toArray();
+        $powerConsumptionRating = PowerConsumptionRating::all()->toArray();
+        $reasonForSale = ReasonForSale::all()->toArray();
+        $plant = Plant::all()->toArray();
+        $doorOptions = Door::all()->toArray();
+        $typeFloor = TypeFloor::all()->toArray();
+        $facade = Facade::all()->toArray();
+        $plazaCapacity = PlazaCapacity::all()->toArray();
+        $typeOfTerrain = TypeOfTerrain::all()->toArray();
+        $wheeledAccess = WheeledAccess::all()->toArray();
+        $nearestMunicipalityDistance = NearestMunicipalityDistance::all()->toArray();
+        $heatingFuel = HeatingFuel::all()->toArray();
+        $locationPremises = LocationPremises::all()->toArray();
+        $garagePriceCategory = GaragePriceCategory::all()->toArray();
+
+        $typesFloors = TypesFloors::where('property_id', $id)->get()->toArray();
+        $equipments = Equipments::where('property_id', $id)->get()->toArray();
+        $coverImage = CoverImage::where('property_id', $id)->get()->toArray();
+        $moreImages = MoreImage::where('property_id', $id)->get()->toArray();
+        $video = Video::where('property_id', $id)->get()->toArray();
+        $orientations = Orientations::where('property_id', $id)->get()->toArray();
+        $features = Features::where('property_id', $id)->get()->toArray();
+
+        $equipment = Equipment::all()->toArray();
+        $formView = 'post.forms.form_1_update';
+
+        if ($typeId === 1) {
+            $equipment = Equipment::where('type_id', 1)->get()->toArray();
+            $formView = 'post.forms.form_1_update';
+        } elseif ($typeId === 13) {
+            $equipment = Equipment::where('type_id', 1)->get()->toArray();
+            $formView = 'post.forms.form_2_update';
+        } elseif ($typeId === 4) {
+            $equipment = Equipment::where('type_id', 4)->get()->toArray();
+            $formView = 'post.forms.form_3_update';
+        } elseif ($typeId === 14) {
+            $feature = Feature::where('id_type', 14)->get()->toArray();
+            $equipment = Equipment::where('type_id', 14)->get()->toArray();
+            $formView = 'post.forms.form_4_update';
+        } elseif ($typeId === 9) {
+            $equipment = Equipment::where('type_id', 4)->get()->toArray();
+            $formView = 'post.forms.form_5_update';
+        } elseif ($typeId === 15) {
+            $formView = 'post.forms.form_casa_rustica_update';
+        }
+
+        return view($formView, [
+            'user' => $user,
+            'userLevelName' => UserLevel::find($user->user_level_id)?->name ?? 'Usuario',
+            'isAdmin' => $isAdmin,
+            'activeNav' => 'properties',
+            'mapsKey' => config('services.google.maps_key'),
+            'propertyAddress' => $propertyAddress,
+            'category' => $category,
+            'city' => $city,
+            'country' => $country,
+            'coverImage' => $coverImage,
+            'feature' => $feature,
+            'features' => $features,
+            'moreImages' => $moreImages,
+            'property' => $property,
+            'province' => $province,
+            'state' => $state,
+            'type' => $type,
+            'userLevel' => $userLevel,
+            'typology' => $typology,
+            'orientation' => $orientation,
+            'orientations' => $orientations,
+            'typeHeating' => $typeHeating,
+            'emissionsRating' => $emissionsRating,
+            'energyClass' => $energyClass,
+            'stateConservation' => $stateConservation,
+            'visibilityInPortals' => $visibilityInPortals,
+            'rentalType' => $rentalType,
+            'contactOption' => $contactOption,
+            'powerConsumptionRating' => $powerConsumptionRating,
+            'reasonForSale' => $reasonForSale,
+            'plant' => $plant,
+            'door' => $doorOptions,
+            'typeFloor' => $typeFloor,
+            'typesFloors' => $typesFloors,
+            'facade' => $facade,
+            'equipment' => $equipment,
+            'equipments' => $equipments,
+            'plazaCapacity' => $plazaCapacity,
+            'typeOfTerrain' => $typeOfTerrain,
+            'wheeledAccess' => $wheeledAccess,
+            'nearestMunicipalityDistance' => $nearestMunicipalityDistance,
+            'video' => $video,
+            'heatingFuel' => $heatingFuel,
+            'locationPremises' => $locationPremises,
+            'garagePriceCategory' => $garagePriceCategory,
+        ]);
+    }
+
+    public function delete(Request $request)
+    {
+        $user = Auth::user();
+        $propertyId = (int) $request->query('id');
+
+        if (! $user) {
+            return response()->json(['status' => 401]);
+        }
+
+        $property = Property::find($propertyId);
+        if (! $property) {
+            return response()->json(['status' => 404]);
+        }
+
+        $isAdmin = (int) $user->user_level_id === 1;
+        if (! $isAdmin && (int) $property->user_id !== (int) $user->id) {
+            return response()->json(['status' => 403]);
+        }
+
+        CoverImage::where('property_id', $propertyId)->delete();
+        MoreImage::where('property_id', $propertyId)->delete();
+        Video::where('property_id', $propertyId)->delete();
+        PropertyAddress::where('property_id', $propertyId)->delete();
+        Features::where('property_id', $propertyId)->delete();
+        Equipments::where('property_id', $propertyId)->delete();
+        Orientations::where('property_id', $propertyId)->delete();
+        TypesFloors::where('property_id', $propertyId)->delete();
+
+        $property->delete();
+
+        return response()->json(['status' => 200]);
+    }
+
+    public function disabledEnabled(Request $request)
+    {
+        $user = Auth::user();
+        $propertyId = (int) $request->query('id');
+
+        if (! $user) {
+            return response()->json(['status' => 401]);
+        }
+
+        $property = Property::find($propertyId);
+        if (! $property) {
+            return response()->json(['status' => 404]);
+        }
+
+        $isAdmin = (int) $user->user_level_id === 1;
+        if (! $isAdmin && (int) $property->user_id !== (int) $user->id) {
+            return response()->json(['status' => 403]);
+        }
+
+        $property->state_id = (int) $property->state_id === 5 ? 4 : 5;
+        $property->save();
+
+        return response()->json([
+            'status' => 200,
+            'state_id' => $property->state_id,
+        ]);
+    }
+
+    public function deleteMoreImage(Request $request)
+    {
+        $user = Auth::user();
+        $imageId = (int) $request->query('id');
+
+        if (! $user) {
+            return response()->json(['status' => 401]);
+        }
+
+        if (! $imageId) {
+            return response()->json(['status' => 400]);
+        }
+
+        $image = MoreImage::find($imageId);
+        if (! $image) {
+            return response()->json(['status' => 404]);
+        }
+
+        $isAdmin = (int) $user->user_level_id === 1;
+        if (! empty($image->property_id)) {
+            $property = Property::find($image->property_id);
+            if (! $property) {
+                return response()->json(['status' => 404]);
+            }
+            if (! $isAdmin && (int) $property->user_id !== (int) $user->id) {
+                return response()->json(['status' => 403]);
+            }
+        } elseif (! empty($image->service_id)) {
+            $service = Service::find($image->service_id);
+            if (! $service) {
+                return response()->json(['status' => 404]);
+            }
+            if (! $isAdmin && (int) $service->user_id !== (int) $user->id) {
+                return response()->json(['status' => 403]);
+            }
+        } elseif (! $isAdmin) {
+            return response()->json(['status' => 403]);
+        }
+
+        $filePath = public_path('img/uploads/' . $image->url);
+        if (is_file($filePath)) {
+            @unlink($filePath);
+        }
+
+        $image->delete();
+
+        return response()->json(['status' => 200]);
+    }
+
+    public function services()
+    {
+        $user = Auth::user();
+        $isAdmin = $user && (int) $user->user_level_id === 1;
+        $userLevelName = $user ? (UserLevel::find($user->user_level_id)?->name ?? 'Usuario') : 'Usuario';
+
+        if ($isAdmin) {
+            $request = request();
+            $filters = [
+                'q' => trim((string) $request->query('q', '')),
+            ];
+
+            $query = User::where('user_level_id', 4);
+            if ($filters['q'] !== '') {
+                $search = $filters['q'];
+                $query->where(function ($builder) use ($search) {
+                    $builder->where('first_name', 'like', '%' . $search . '%')
+                        ->orWhere('last_name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%')
+                        ->orWhere('user_name', 'like', '%' . $search . '%')
+                        ->orWhere('phone', 'like', '%' . $search . '%')
+                        ->orWhere('landline_phone', 'like', '%' . $search . '%')
+                        ->orWhere('address', 'like', '%' . $search . '%');
+                });
+            }
+
+            $providers = $query->orderByDesc('id')->paginate(15)->withQueryString();
+            $providerIds = $providers->pluck('id')->map(fn ($id) => (int) $id)->all();
+            $addressRows = empty($providerIds)
+                ? collect()
+                : UserAddress::whereIn('user_id', $providerIds)->get()->groupBy('user_id');
+            $levelMap = UserLevel::pluck('name', 'id')->all();
+
+            $providers->getCollection()->transform(function (User $provider) use ($addressRows, $levelMap) {
+                $address = $addressRows->get($provider->id)?->first();
+                $name = trim(($provider->first_name ?? '') . ' ' . ($provider->last_name ?? ''));
+                if ($name === '') {
+                    $name = $provider->user_name ?: ($provider->email ?: 'Proveedor');
+                }
+
+                $addressParts = [];
+                $baseAddress = $address?->address ?: ($provider->address ?? '');
+                if ($baseAddress) {
+                    $addressParts[] = $baseAddress;
+                }
+                if ($address?->city) {
+                    $addressParts[] = $address->city;
+                }
+                if ($address?->province) {
+                    $addressParts[] = $address->province;
+                }
+                if ($address?->country) {
+                    $addressParts[] = $address->country;
+                }
+
+                return [
+                    'id' => $provider->id,
+                    'name' => $name,
+                    'level' => $levelMap[$provider->user_level_id] ?? 'Proveedor de servicio',
+                    'email' => $provider->email ?? '',
+                    'phone' => $provider->phone ?? '',
+                    'landline_phone' => $provider->landline_phone ?? '',
+                    'address' => trim(implode(', ', $addressParts)),
+                    'is_active' => (int) ($provider->is_active ?? 1),
+                ];
+            });
+
+            return view('post.providers', [
+                'user' => $user,
+                'userLevelName' => $userLevelName,
+                'isAdmin' => $isAdmin,
+                'activeNav' => 'services',
+                'providers' => $providers,
+                'filters' => $filters,
+            ]);
+        }
+
+        $request = request();
+        $filters = [
+            'q' => trim((string) $request->query('q', '')),
+            'type' => (string) $request->query('type', ''),
+            'ds' => (string) $request->query('ds', ''),
+            'de' => (string) $request->query('de', ''),
+        ];
+
+        $query = Service::query();
+        if (! $isAdmin && $user) {
+            $query->where('user_id', $user->id);
+        }
+
+        if ($filters['q'] !== '') {
+            $search = $filters['q'];
+            $query->where(function ($builder) use ($search) {
+                $builder->where('title', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($filters['type'] !== '' && $filters['type'] !== 'all') {
+            $serviceIds = ServiceTypeLink::where('service_type_id', (int) $filters['type'])
+                ->pluck('service_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            if (! empty($serviceIds)) {
+                $query->whereIn('id', $serviceIds);
+            } else {
+                $query->where('id', 0);
+            }
+        }
+
+        if ($filters['ds'] !== '') {
+            $query->whereDate('created_at', '>=', $filters['ds']);
+        }
+
+        if ($filters['de'] !== '') {
+            $query->whereDate('created_at', '<=', $filters['de']);
+        }
+
+        $services = $query->orderByDesc('id')->paginate(9)->withQueryString();
+
+        $serviceIds = $services->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $coverImages = empty($serviceIds)
+            ? collect()
+            : CoverImage::whereIn('service_id', $serviceIds)->get()->keyBy('service_id');
+        $serviceAddresses = empty($serviceIds)
+            ? collect()
+            : ServiceAddress::whereIn('service_id', $serviceIds)->get()->keyBy('service_id');
+        $serviceVideos = empty($serviceIds)
+            ? collect()
+            : Video::whereIn('service_id', $serviceIds)->get()->keyBy('service_id');
+        $serviceTypeLinks = empty($serviceIds)
+            ? collect()
+            : ServiceTypeLink::whereIn('service_id', $serviceIds)->get()->groupBy('service_id');
+        $serviceTypeMap = ServiceType::pluck('name', 'id')->all();
+
+        $ownerIds = $services->pluck('user_id')->filter()->unique()->values()->all();
+        $owners = empty($ownerIds) ? collect() : User::whereIn('id', $ownerIds)->get()->keyBy('id');
+        $ownerAddresses = empty($ownerIds)
+            ? collect()
+            : UserAddress::whereIn('user_id', $ownerIds)->get()->groupBy('user_id');
+
+        $services->getCollection()->transform(function (Service $service) use ($coverImages, $serviceAddresses, $serviceVideos, $serviceTypeLinks, $serviceTypeMap, $owners, $ownerAddresses, $isAdmin) {
+            $links = $serviceTypeLinks->get($service->id) ?? collect();
+            $typeNames = [];
+            foreach ($links as $link) {
+                $typeId = (int) $link->service_type_id;
+                if (isset($serviceTypeMap[$typeId])) {
+                    $typeNames[] = $serviceTypeMap[$typeId];
+                }
+            }
+
+            $owner = $owners->get($service->user_id);
+            $ownerName = '';
+            if ($owner) {
+                $ownerName = trim(($owner->first_name ?? '') . ' ' . ($owner->last_name ?? ''));
+                if ($ownerName === '') {
+                    $ownerName = $owner->user_name ?? '';
+                }
+            }
+
+            $serviceAddress = $serviceAddresses->get($service->id);
+            $serviceAddressParts = [];
+            if ($serviceAddress?->address) {
+                $serviceAddressParts[] = $serviceAddress->address;
+            }
+            if ($serviceAddress?->city) {
+                $serviceAddressParts[] = $serviceAddress->city;
+            }
+            if ($serviceAddress?->province) {
+                $serviceAddressParts[] = $serviceAddress->province;
+            }
+            if ($serviceAddress?->country) {
+                $serviceAddressParts[] = $serviceAddress->country;
+            }
+            $serviceFullAddress = trim(implode(', ', $serviceAddressParts));
+
+            $serviceVideo = $serviceVideos->get($service->id);
+            $address = $ownerAddresses->get($service->user_id)?->first();
+
+            return [
+                'id' => $service->id,
+                'title' => $service->title ?: 'Servicio',
+                'description' => $service->description,
+                'availability' => $service->availability,
+                'image' => $coverImages->get($service->id)?->url ?? null,
+                'types' => $typeNames,
+                'owner' => $isAdmin ? $ownerName : '',
+                'address' => $address?->address ?? '',
+                'city' => $address?->city ?? '',
+                'phone' => $owner?->phone ?? '',
+                'page_url' => $service->page_url ?? '',
+                'service_address' => $serviceAddress?->address ?? '',
+                'service_city' => $serviceAddress?->city ?? '',
+                'service_province' => $serviceAddress?->province ?? '',
+                'service_country' => $serviceAddress?->country ?? '',
+                'service_full_address' => $serviceFullAddress,
+                'video' => $serviceVideo?->url ?? null,
+                'updated_at' => $service->updated_at ? $service->updated_at->format('d/m/Y') : '',
+            ];
+        });
+
+        $serviceTypeOptions = ServiceType::orderBy('name')->get(['id', 'name']);
+
+        $isProviderView = $user ? $user->isServiceProvider() : false;
+        $providerProfile = null;
+        $providerServiceTypes = [];
+        $providerLanding = null;
+        if ($isProviderView && $user) {
+            $profileAddress = UserAddress::where('user_id', $user->id)->first();
+            $name = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+            if ($name === '') {
+                $name = $user->user_name ?: ($user->email ?: 'Proveedor');
+            }
+
+            $addressParts = [];
+            $baseAddress = $profileAddress?->address ?: ($user->address ?? '');
+            if ($baseAddress) {
+                $addressParts[] = $baseAddress;
+            }
+            if ($profileAddress?->city) {
+                $addressParts[] = $profileAddress->city;
+            }
+            if ($profileAddress?->province) {
+                $addressParts[] = $profileAddress->province;
+            }
+            if ($profileAddress?->country) {
+                $addressParts[] = $profileAddress->country;
+            }
+
+            $providerProfile = [
+                'name' => $name,
+                'email' => $user->email ?? '',
+                'phone' => $user->phone ?? '',
+                'landline_phone' => $user->landline_phone ?? '',
+                'address' => trim(implode(', ', $addressParts)),
+                'photo' => $user->photo ? asset('img/photo_profile/' . $user->photo) : asset('img/default-avatar-profile-icon.webp'),
+            ];
+
+            $providerServiceIds = Service::where('user_id', $user->id)->pluck('id')->map(fn ($id) => (int) $id)->all();
+            if (! empty($providerServiceIds)) {
+                $typeIds = ServiceTypeLink::whereIn('service_id', $providerServiceIds)
+                    ->pluck('service_type_id')
+                    ->unique()
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+                if (! empty($typeIds)) {
+                    $providerServiceTypes = ServiceType::whereIn('id', $typeIds)->orderBy('name')->pluck('name')->all();
+                }
+            }
+
+            $primaryService = $services->first();
+            $heroImage = asset('img/image-icon-1280x960.png');
+            $serviceDescription = '';
+            $serviceAvailability = '';
+            $servicePageUrl = '';
+            $serviceUpdatedAt = '';
+            $serviceVideoUrl = '';
+            $serviceAddressLabel = $providerProfile['address'] ?? '';
+
+            if ($primaryService) {
+                if (! empty($primaryService['image'])) {
+                    $heroImage = asset('img/uploads/' . $primaryService['image']);
+                }
+                $serviceDescription = $primaryService['description'] ?? '';
+                $serviceAvailability = $primaryService['availability'] ?? '';
+                $servicePageUrl = $primaryService['page_url'] ?? '';
+                $serviceUpdatedAt = $primaryService['updated_at'] ?? '';
+                if (! empty($primaryService['service_full_address'])) {
+                    $serviceAddressLabel = $primaryService['service_full_address'];
+                }
+                if (! empty($primaryService['video'])) {
+                    $serviceVideoUrl = asset('video/uploads/' . $primaryService['video']);
+                }
+            }
+
+            $mapQuery = trim((string) $serviceAddressLabel);
+            $mapLink = $mapQuery !== ''
+                ? 'https://www.google.com/maps/search/?api=1&query=' . urlencode($mapQuery)
+                : '';
+            $mapEmbed = $mapQuery !== ''
+                ? 'https://www.google.com/maps?q=' . urlencode($mapQuery) . '&output=embed'
+                : '';
+
+            $whatsappPhone = preg_replace('/\D+/', '', (string) ($providerProfile['phone'] ?? ''));
+            $whatsappLink = $whatsappPhone !== '' ? 'https://wa.me/' . $whatsappPhone : '';
+
+            $providerLanding = [
+                'hero_image' => $heroImage,
+                'address' => $serviceAddressLabel,
+                'description' => $serviceDescription,
+                'availability' => $serviceAvailability,
+                'page_url' => $servicePageUrl,
+                'updated_at' => $serviceUpdatedAt,
+                'video_url' => $serviceVideoUrl,
+                'map_link' => $mapLink,
+                'map_embed' => $mapEmbed,
+                'whatsapp_link' => $whatsappLink,
+            ];
+        }
+
+        return view('post.services', [
+            'user' => $user,
+            'userLevelName' => $userLevelName,
+            'isAdmin' => $isAdmin,
+            'activeNav' => 'services',
+            'services' => $services,
+            'filters' => $filters,
+            'serviceTypeOptions' => $serviceTypeOptions,
+            'isProviderView' => $isProviderView,
+            'providerProfile' => $providerProfile,
+            'providerServiceTypes' => $providerServiceTypes,
+            'providerLanding' => $providerLanding,
+        ]);
+    }
+
+    public function servicesDelete(Request $request)
+    {
+        $user = Auth::user();
+        $serviceId = (int) $request->query('id');
+
+        if (! $user) {
+            return response()->json(['status' => 401]);
+        }
+
+        $service = Service::find($serviceId);
+        if (! $service) {
+            return response()->json(['status' => 404]);
+        }
+
+        $isAdmin = (int) $user->user_level_id === 1;
+        if (! $isAdmin && (int) $service->user_id !== (int) $user->id) {
+            return response()->json(['status' => 403]);
+        }
+
+        CoverImage::where('service_id', $serviceId)->delete();
+        MoreImage::where('service_id', $serviceId)->delete();
+        Video::where('service_id', $serviceId)->delete();
+        ServiceAddress::where('service_id', $serviceId)->delete();
+        ServiceTypeLink::where('service_id', $serviceId)->delete();
+
+        $service->delete();
+
+        return response()->json(['status' => 200]);
+    }
+
+    public function servicesUpdate(string $id)
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $isAdmin = (int) $user->user_level_id === 1;
+        $serviceQuery = Service::where('id', $id);
+        if (! $isAdmin) {
+            $serviceQuery->where('user_id', $user->id);
+        }
+        $service = $serviceQuery->get()->toArray();
+        if (empty($service)) {
+            return redirect()
+                ->to('/post/services')
+                ->with('status', 'Ocurrio un error interno');
+        }
+
+        $serviceType = ServiceType::all()->toArray();
+        $serviceTypes = ServiceTypeLink::where('service_id', $id)->get()->toArray();
+        $coverImage = CoverImage::where('service_id', $id)->get()->toArray();
+        $moreImages = MoreImage::where('service_id', $id)->get()->toArray();
+        $video = Video::where('service_id', $id)->get()->toArray();
+
+        return view('post.forms.form_service_update', [
+            'user' => $user,
+            'userLevelName' => UserLevel::find($user->user_level_id)?->name ?? 'Usuario',
+            'isAdmin' => $isAdmin,
+            'activeNav' => 'services',
+            'mapsKey' => config('services.google.maps_key'),
+            'serviceType' => $serviceType,
+            'serviceTypes' => $serviceTypes,
+            'moreImages' => $moreImages,
+            'coverImage' => $coverImage,
+            'service' => $service,
+            'video' => $video,
+        ]);
+    }
+
+    public function servicesUpdateSave(Request $request)
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $serviceId = (int) $request->input('service_id');
+        if (! $serviceId) {
+            return redirect()->back();
+        }
+
+        $isAdmin = (int) $user->user_level_id === 1;
+        $serviceQuery = Service::where('id', $serviceId);
+        if (! $isAdmin) {
+            $serviceQuery->where('user_id', $user->id);
+        }
+        $service = $serviceQuery->first();
+        if (! $service) {
+            return redirect()
+                ->to('/post/services')
+                ->with('status', 'Ocurrio un error interno');
+        }
+
+        $dataForDb = [];
+        $title = $request->input('title');
+        $description = $request->input('description');
+        $availability = $request->input('availability');
+        $documentNumber = $request->input('document_number');
+        $pageUrl = $request->input('page_url');
+        $serviceTypes = $request->input('service_type');
+
+        $address = $request->input('address');
+        $city = $request->input('city');
+        $postalCode = $request->input('postal_code');
+        $province = $request->input('province');
+        $country = $request->input('country');
+        $latitude = $request->input('latitude');
+        $longitude = $request->input('longitude');
+
+        if (! empty($title)) {
+            $dataForDb['title'] = $title;
+        }
+        if (! empty($description)) {
+            $dataForDb['description'] = $description;
+        }
+        if (! empty($availability)) {
+            $dataForDb['availability'] = $availability;
+        }
+        if (! empty($documentNumber)) {
+            $dataForDb['document_number'] = $documentNumber;
+        }
+        if (! empty($pageUrl)) {
+            $dataForDb['page_url'] = $pageUrl;
+        }
+
+        if (! empty($dataForDb)) {
+            Service::where('id', $serviceId)->update($dataForDb);
+        }
+
+        if (! empty($serviceTypes)) {
+            ServiceTypeLink::where('service_id', $serviceId)->delete();
+            foreach ($serviceTypes as $value) {
+                ServiceTypeLink::create([
+                    'service_id' => $serviceId,
+                    'service_type_id' => $value,
+                ]);
+            }
+        }
+
+        if ($address || $city || $postalCode || $province || $country || $latitude || $longitude) {
+            ServiceAddress::updateOrCreate(
+                ['service_id' => $serviceId],
+                [
+                    'address' => $address ?? '',
+                    'city' => $city ?? '',
+                    'province' => $province ?? '',
+                    'postal_code' => $postalCode ?? '',
+                    'country' => $country ?? '',
+                    'latitude' => $latitude ?? '',
+                    'longitude' => $longitude ?? '',
+                ]
+            );
+        }
+
+        $imagePath = public_path('img/uploads');
+        $videoPath = public_path('video/uploads');
+        if (! is_dir($imagePath)) {
+            @mkdir($imagePath, 0755, true);
+        }
+        if (! is_dir($videoPath)) {
+            @mkdir($videoPath, 0755, true);
+        }
+
+        $coverImage = $request->file('cover_image');
+        if ($coverImage && $coverImage->isValid()) {
+            $randomName = bin2hex(random_bytes(16)) . '.webp';
+            $tempPath = $coverImage->getRealPath();
+            $image = null;
+            $isWebp = false;
+            switch ($coverImage->getMimeType()) {
+                case 'image/webp':
+                    $isWebp = true;
+                    if (! $coverImage->move($imagePath, $randomName)) {
+                        return redirect()->back()->with('error', 'Error al mover la imagen WebP.');
+                    }
+                    break;
+                case 'image/jpeg':
+                    $image = imagecreatefromjpeg($tempPath);
+                    break;
+                case 'image/png':
+                    $image = imagecreatefrompng($tempPath);
+                    break;
+                default:
+                    return redirect()->back()->with('error', 'Formato de imagen no soportado.');
+            }
+            if (! $isWebp) {
+                $webpPath = $imagePath . DIRECTORY_SEPARATOR . $randomName;
+                if (imagewebp($image, $webpPath, 80)) {
+                    CoverImage::updateOrCreate(
+                        ['service_id' => $serviceId],
+                        ['url' => $randomName]
+                    );
+                } else {
+                    return redirect()->back()->with('error', 'Error al convertir la imagen a WebP.');
+                }
+                imagedestroy($image);
+            } else {
+                CoverImage::updateOrCreate(
+                    ['service_id' => $serviceId],
+                    ['url' => $randomName]
+                );
+            }
+        }
+
+        $moreImages = $request->file('more_images', []);
+        if (! empty($moreImages)) {
+            foreach ((array) $moreImages as $file) {
+                if (! $file || ! $file->isValid()) {
+                    continue;
+                }
+
+                $randomName = bin2hex(random_bytes(16)) . '.webp';
+                $tempPath = $file->getRealPath();
+                $image = null;
+                $isWebp = false;
+                switch ($file->getMimeType()) {
+                    case 'image/webp':
+                        $isWebp = true;
+                        if (! $file->move($imagePath, $randomName)) {
+                            return redirect()->back()->with('error', 'Error al mover la imagen WebP.');
+                        }
+                        break;
+                    case 'image/jpeg':
+                        $image = imagecreatefromjpeg($tempPath);
+                        break;
+                    case 'image/png':
+                        $image = imagecreatefrompng($tempPath);
+                        break;
+                    default:
+                        return redirect()->back()->with('error', 'Formato de imagen no soportado.');
+                }
+                if (! $isWebp) {
+                    $webpPath = $imagePath . DIRECTORY_SEPARATOR . $randomName;
+                    if (imagewebp($image, $webpPath, 80)) {
+                        MoreImage::create([
+                            'url' => $randomName,
+                            'service_id' => $serviceId,
+                        ]);
+                    } else {
+                        return redirect()->back()->with('error', 'Error al convertir la imagen a WebP.');
+                    }
+                    imagedestroy($image);
+                } else {
+                    MoreImage::create([
+                        'url' => $randomName,
+                        'service_id' => $serviceId,
+                    ]);
+                }
+            }
+        }
+
+        $video = $request->file('video');
+        if ($video && $video->isValid()) {
+            $allowedMime = ['video/mp4', 'video/avi', 'video/mov', 'video/mpeg'];
+            if (! in_array($video->getMimeType(), $allowedMime, true)) {
+                return redirect()->back()->with('error', 'El video no es valido.');
+            }
+            if ($video->getSize() > 51200 * 1024) {
+                return redirect()->back()->with('error', 'El video excede el limite permitido.');
+            }
+
+            $extension = $video->getClientOriginalExtension();
+            $randomName = bin2hex(random_bytes(16)) . '.' . $extension;
+            if (! $video->move($videoPath, $randomName)) {
+                return redirect()->back()->with('error', 'Error al guardar el video.');
+            }
+
+            Video::updateOrCreate(
+                ['service_id' => $serviceId],
+                ['url' => $randomName]
+            );
+        }
+
+        return redirect()
+            ->to('/post/services')
+            ->with('status', 'Actualizado correctamente');
+    }
+
+    public function createService(Request $request)
+    {
+        return redirect()->back();
+    }
+}

@@ -1,0 +1,64 @@
+.section-reviews-main-row{
+    width: 100%;
+    margin-top: 2rem;
+    margin-bottom: 6rem;
+
+}
+.section-reviews-main-row h2{
+    font-size: 2rem;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+.ctn-user-reviews-main-row{
+    padding: .4rem;
+    box-sizing: border-box;
+}
+
+.ctn-user-reviews-main-row .review{
+    width: 30rem;
+    height: 12rem;
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #fff;
+    box-shadow: 2px 2px 10px rgb(233, 228, 228), -2px -2px 10px rgb(236, 231, 231);
+    border-radius: 8px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+.ctn-user-reviews-main-row .review > img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-right: 15px;
+    margin-top: .8rem;
+}
+.ctn-user-reviews-main-row .review .review-content .container-icon-p{
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+.ctn-user-reviews-main-row .review .review-content .container-icon-p img{
+    object-fit: cover;
+    max-width: 1.5rem;
+}
+.ctn-user-reviews-main-row .review .review-content h3 {
+    margin: 0;
+    font-size: 1.2em;
+    color: #333;
+}
+
+.ctn-user-reviews-main-row .review .review-content p {
+    margin: 5px 0;
+    color: #666;
+}
+@media (orientation: portrait) {
+    .ctn-user-reviews-main-row .review{
+        height: fit-content;
+        width: calc(100dvw - 5.5rem);
+    }
+}
