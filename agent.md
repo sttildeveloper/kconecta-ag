@@ -40,8 +40,13 @@ When you arrive at the office, follow these exact steps to resume work:
 5. **Verify Backend AI:**
    The orchestrator is ready at `app/Services/OllamaOrchestratorService.php`. It listens at `POST /api/agent/process`.
 
-5. **Start Mobile App Development:**
-   Initialize your React Native app using Expo in a new directory or alongside this one to start consuming the Laravel API.
+6. **Start Mobile App Development:**
+   The Expo project has been initialized in the `mobile/` directory. Simply install dependencies and start the dev server:
+   ```powershell
+   cd mobile
+   npm install
+   npx expo start
+   ```
 
 ## Hardware Acceleration (Optional)
 If your office or home PC has an Nvidia GPU, edit `docker-compose.yml`, uncomment the `deploy > resources > reservations > devices` block under the `ollama` service, and restart the containers. This will make AI responses lightning fast.
