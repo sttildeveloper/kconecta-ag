@@ -14,6 +14,6 @@
 - [ ] Run `docker compose -p kconecta up -d --build`.
 - [ ] Execute `docker exec -param kconecta-ollama ollama run mistral` to download local models.
 - [ ] Test the `/api/agent/process` endpoint using Postman or cURL.
-- [ ] Scaffold the React Native application using Expo.
+- [x] Scaffold the React Native application using Expo.
 - [ ] Set up the first communication test between the local Expo App and the local Laravel backend.
 - [ ] Design the chatbot UI component to consume the Ollama Orchestrator.

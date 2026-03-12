@@ -10,3 +10,4 @@ bootstrap/cache/*.php
 npm-debug.log
 yarn-error.log
 .DS_Store
+mobile
