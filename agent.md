@@ -50,3 +50,11 @@ When you arrive at the office, follow these exact steps to resume work:
 
 ## Hardware Acceleration (Optional)
 If your office or home PC has an Nvidia GPU, edit `docker-compose.yml`, uncomment the `deploy > resources > reservations > devices` block under the `ollama` service, and restart the containers. This will make AI responses lightning fast.
+
+## Local Development Agent (Zero Token Cost)
+To eliminate external API costs during this project's development:
+1. Open your code editor (e.g., VS Code) and install an autonomous agent extension like **Roo Code (Roo/Cline)** or **Continue.dev**.
+2. Configure the extension to use **Ollama** as the provider, pointing to `http://localhost:11434`.
+3. Set the active generation model to `deepseek-coder` (or `qwen2.5-coder`).
+4. Give the agent its first prompt: *"Read `agent.md`, `todo.md`, and `tasks.md` to pick up the context of this project and continue our tasks."*
+It will seamlessly pick up the orchestration locally.

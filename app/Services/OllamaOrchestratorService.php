@@ -19,7 +19,7 @@ class OllamaOrchestratorService
     /**
      * Sends a prompt to a specific local model via Ollama.
      */
-    public function generateResponse(string $prompt, string $model = 'mistral')
+    public function generateResponse(string $prompt, string $model = 'mistral-nemo:latest')
     {
         try {
             // High timeout for local models processing heavy tasks
@@ -52,9 +52,9 @@ class OllamaOrchestratorService
         // Tareas lógicas, estructuración de datos pesados o código -> DeepSeek
         // Tareas de chat, redacción, resúmenes -> Mistral
         $model = match ($taskType) {
-            'logic', 'data_extraction', 'analysis' => 'deepseek-coder',
-            'chat', 'summary', 'assistant' => 'mistral',
-            default => 'mistral',
+            'logic', 'data_extraction', 'analysis' => 'deepseek-coder-v2:16b',
+            'chat', 'summary', 'assistant' => 'mistral-nemo:latest',
+            default => 'mistral-nemo:latest',
         };
 
         // 2. Construcción del Prompt del Orquestador

@@ -8,14 +8,14 @@
 - [x] Setup continuous deployment with Dokploy.
 
 ## Phase 2 - Mobile App Initialization (Next step)
-- [ ] Initialize React Native project using Expo (`npx create-expo-app`).
-- [ ] Setup global state management (Zustand/Context API) and Expo Router.
-- [ ] Configure Axios/Fetch to consume Laravel's API via local network IP.
+- [x] Initialize React Native project using Expo (`npx create-expo-app`).
+- [x] Setup global state management (Zustand/Context API) and Expo Router.
+- [x] Configure Axios/Fetch to consume Laravel's API via local network IP.
 - [ ] Implement user authentication UI (communicating with Laravel Sanctum).
-- [ ] Build the Chat/Assistant UI to interact with the local AI.
+- [x] Build the Chat/Assistant UI to interact with the local AI.
 
-## Phase 3 - App Capabilities & Logic
-- [ ] Consume standard CRM endpoints (properties, services, maps).
+## Phase 3 - App Capabilities & Logic (Properties Focus)
+- [ ] Consume standard CRM endpoints (properties, maps). *Note: Services and Providers deferred to a later phase.*
 - [ ] Refine AI prompts for specific CRM tasks (summarizing properties, drafting emails).
 - [ ] Ensure mobile UI handles agent streaming or loading states smoothly.
 
